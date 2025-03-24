@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Church Activities Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        label, input, textarea, select, button {
+            display: block;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #message {
+            margin-top: 10px;
+            color: green;
+        }
+    </style>
+</head> 
+<body>
+    <h2>Set Your Weekly Church Activities Reminder</h2>
+    <form id="reminderForm">
+        <label for="email">Your Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="activities">Church Activities:</label>
+        <textarea id="activities" name="activities" rows="4" required placeholder="e.g., Sunday Service at 9 AM, Bible Study at 11 AM"></textarea>
+
+        <label for="time">Reminder Time (HH:MM, 24-hour):</label>
+        <input type="text" id="time" name="time" required placeholder="e.g., 08:00">
+
+        <label for="day">Day of the Week:</label>
+        <select id="day" name="day" required>
+            <option value="0">Sunday</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+        </select>
+
+        <button type="submit">Set Reminder</button>
+    </form>
+    <div id="message"></div>
+
+    <script>
+        document.getElementById('reminderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const activities = document.getElementById('activities').value;
+            const time = document.getElementById('time').value;
+            const day = document.getElementById('day').value;
+
+            const response = await fetch('http://localhost:3000/set-reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, activities, time, day })
+            });
+
+            const result = await response.text();
+            document.getElementById('message').textContent = result;
+        });
+    </script>
+</body>
+</html>

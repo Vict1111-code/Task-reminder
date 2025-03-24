@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Lecture Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Daily Lecture Reminder</h2>
+    <form id="reminderForm" action="https://formspree.io/f/xwplbrlq" method="POST">
+        <div class="form-group">
+            <label for="email">Your Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" name="startDate" min="2025-03-24" required>
+        </div>
+        <div class="form-group">
+            <label for="lectureTime">Lecture Time (24-hour format):</label>
+            <input type="time" id="lectureTime" name="lectureTime" required>
+        </div>
+        <div class="form-group">
+            <label>Days of Week:</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="days[]" value="Monday"> Monday</label>
+                <label><input type="checkbox" name="days[]" value="Tuesday"> Tuesday</label>
+                <label><input type="checkbox" name="days[]" value="Wednesday"> Wednesday</label>
+                <label><input type="checkbox" name="days[]" value="Thursday"> Thursday</label>
+                <label><input type="checkbox" name="days[]" value="Friday"> Friday</label>
+                <label><input type="checkbox" name="days[]" value="Saturday"> Saturday</label>
+                <label><input type="checkbox" name="days[]" value="Sunday"> Sunday</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lectureName">Lecture Name:</label>
+            <input type="text" id="lectureName" name="lectureName" required>
+        </div>
+        <div class="form-group">
+            <label for="message">Reminder Message:</label>
+            <textarea id="message" name="message" rows="4" required></textarea>
+        </div>
+        <button type="submit">Set Reminder</button>
+    </form>
+    <div id="status"></div>
+
+    <script>
+        // Set minimum date to today (March 24, 2025)
+        document.getElementById('startDate').min = '2025-03-24';
+
+        document.getElementById('reminderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const status = document.getElementById('status');
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            // Validate that at least one day is selected
+            const selectedDays = form.querySelectorAll('input[name="days[]"]:checked');
+            if (selectedDays.length === 0) {
+                status.textContent = 'Please select at least one day of the week.';
+                status.style.color = 'red';
+                return;
+            }
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    status.textContent = 'Reminder set successfully! You\'ll receive reminders on selected days.';
+                    status.style.color = 'green';
+                    
+                    // Calculate first reminder
+                    const startDate = new Date(document.getElementById('startDate').value);
+                    const lectureTime = document.getElementById('lectureTime').value;
+                    const [hours, minutes] = lectureTime.split(':');
+                    const selectedDaysArray = Array.from(selectedDays).map(cb => cb.value);
+                    
+                    let firstReminder = new Date(startDate);
+                    firstReminder.setHours(hours, minutes, 0, 0);
+
+                    // Find next valid day if start date doesn't match selected days
+                    while (!selectedDaysArray.includes(firstReminder.toLocaleString('en-US', { weekday: 'long' }))) {
+                        firstReminder.setDate(firstReminder.getDate() + 1);
+                    }
+
+                    const now = new Date();
+                    if (now > firstReminder) {
+                        firstReminder.setDate(firstReminder.getDate() + 1);
+                        while (!selectedDaysArray.includes(firstReminder.toLocaleString('en-US', { weekday: 'long' }))) {
+                            firstReminder.setDate(firstReminder.getDate() + 1);
+                        }
+                    }
+
+                    const timeUntilReminder = firstReminder - now;
+                    console.log(`First reminder scheduled for ${firstReminder.toLocaleString()} (${Math.round(timeUntilReminder/1000/60)} minutes from now)`);
+
+                    form.reset();
+                } else {
+                    throw new Error('Form submission failed');
+                }
+            } catch (error) {
+                status.textContent = 'Error setting reminder. Please try again.';
+                status.style.color = 'red';
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
