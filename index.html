@@ -1,155 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Lecture Reminder</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-        }
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #status {
-            margin-top: 10px;
-            font-weight: bold;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Daily Lecture Reminder</title>
+
+    <!--manifest-->
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7597de">
+
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #2b1055, #7597de);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 20px;
+        color: #fff;
+    }
+    .card {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(12px);
+        padding: 25px;
+        border-radius: 15px;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 0 25px rgba(0,0,0,0.2);
+        animation: fadeIn 0.6s ease-in-out;
+    }
+    h2 {
+        text-align: center;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 6px; font-weight: 500; }
+    input, textarea {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+        font-size: 1rem;
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        transition: 0.3s;
+    }
+    input:focus, textarea:focus { background: rgba(255,255,255,0.25); }
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .checkbox-group label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        background: rgba(255,255,255,0.15);
+        padding: 5px 10px;
+        border-radius: 6px;
+        transition: 0.3s;
+    }
+    .checkbox-group label:hover { background: rgba(255,255,255,0.25); }
+    button {
+        background: linear-gradient(90deg, #4CAF50, #43a047);
+        color: white;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        width: 100%;
+        transition: 0.3s;
+    }
+    button:hover {
+        transform: scale(1.03);
+        background: linear-gradient(90deg, #43a047, #4CAF50);
+    }
+    #status {
+        margin-top: 10px;
+        font-weight: 500;
+        text-align: center;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 </head>
 <body>
-    <h2>Daily Lecture Reminder</h2>
-    <form id="reminderForm" action="https://formspree.io/f/xwplbrlq" method="POST">
+
+<div class="card">
+    <h2>📅 Daily Lecture Reminder</h2>
+    <form id="reminderForm">
         <div class="form-group">
             <label for="email">Your Email:</label>
-            <input type="email" id="email" name="email" required>
+            <input type="email" id="email" name="email" placeholder="e.g. you@example.com" required>
         </div>
         <div class="form-group">
             <label for="startDate">Start Date:</label>
-            <input type="date" id="startDate" name="startDate" min="2025-03-24" required>
+            <input type="date" id="startDate" name="startDate" required>
         </div>
         <div class="form-group">
-            <label for="lectureTime">Lecture Time (24-hour format):</label>
+            <label for="lectureTime">Lecture Time:</label>
             <input type="time" id="lectureTime" name="lectureTime" required>
         </div>
         <div class="form-group">
             <label>Days of Week:</label>
             <div class="checkbox-group">
-                <label><input type="checkbox" name="days[]" value="Monday"> Monday</label>
-                <label><input type="checkbox" name="days[]" value="Tuesday"> Tuesday</label>
-                <label><input type="checkbox" name="days[]" value="Wednesday"> Wednesday</label>
-                <label><input type="checkbox" name="days[]" value="Thursday"> Thursday</label>
-                <label><input type="checkbox" name="days[]" value="Friday"> Friday</label>
-                <label><input type="checkbox" name="days[]" value="Saturday"> Saturday</label>
-                <label><input type="checkbox" name="days[]" value="Sunday"> Sunday</label>
+                <label><input type="checkbox" name="days[]" value="Monday"> Mon</label>
+                <label><input type="checkbox" name="days[]" value="Tuesday"> Tue</label>
+                <label><input type="checkbox" name="days[]" value="Wednesday"> Wed</label>
+                <label><input type="checkbox" name="days[]" value="Thursday"> Thu</label>
+                <label><input type="checkbox" name="days[]" value="Friday"> Fri</label>
+                <label><input type="checkbox" name="days[]" value="Saturday"> Sat</label>
+                <label><input type="checkbox" name="days[]" value="Sunday"> Sun</label>
             </div>
         </div>
         <div class="form-group">
             <label for="lectureName">Lecture Name:</label>
-            <input type="text" id="lectureName" name="lectureName" required>
+            <input type="text" id="lectureName" name="lectureName" placeholder="e.g. Physics 101" required>
         </div>
         <div class="form-group">
             <label for="message">Reminder Message:</label>
-            <textarea id="message" name="message" rows="4" required></textarea>
+            <textarea id="message" name="message" rows="4" placeholder="Write your reminder..." required></textarea>
         </div>
         <button type="submit">Set Reminder</button>
     </form>
     <div id="status"></div>
+</div>
 
-    <script>
-        // Set minimum date to today (March 24, 2025)
-        document.getElementById('startDate').min = '2025-03-24';
+<!-- Sound alert -->
+<audio id="alertSound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
 
-        document.getElementById('reminderForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const status = document.getElementById('status');
-            const form = e.target;
-            const formData = new FormData(form);
-            
-            // Validate that at least one day is selected
-            const selectedDays = form.querySelectorAll('input[name="days[]"]:checked');
-            if (selectedDays.length === 0) {
-                status.textContent = 'Please select at least one day of the week.';
-                status.style.color = 'red';
-                return;
-            }
+<script>
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').min = today;
 
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+    // Request notification permission
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+
+    document.getElementById('reminderForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const status = document.getElementById('status');
+        const selectedDays = document.querySelectorAll('input[name="days[]"]:checked');
+
+        if (selectedDays.length === 0) {
+            status.textContent = '⚠ Please select at least one day.';
+            status.style.color = 'orange';
+            return;
+        }
+
+        const startDate = document.getElementById('startDate').value;
+        const lectureTime = document.getElementById('lectureTime').value;
+        const lectureName = document.getElementById('lectureName').value;
+        const message = document.getElementById('message').value;
+
+        const [hours, minutes] = lectureTime.split(':');
+        let reminderDate = new Date(startDate);
+        reminderDate.setHours(hours, minutes, 0, 0);
+
+        const dayNames = Array.from(selectedDays).map(cb => cb.value);
+
+        // Adjust reminder to match one of the selected days
+        while (!dayNames.includes(reminderDate.toLocaleDateString('en-US', { weekday: 'long' }))) {
+            reminderDate.setDate(reminderDate.getDate() + 1);
+        }
+
+        const now = new Date();
+        const timeDiff = reminderDate.getTime() - now.getTime();
+
+        if (timeDiff <= 0) {
+            status.textContent = "⏳ Reminder time must be in the future.";
+            status.style.color = "red";
+            return;
+        }
+
+        status.textContent = `✅ Reminder set for ${reminderDate.toLocaleString()}`;
+        status.style.color = "#4CAF50";
+
+        // Schedule the notification
+        setTimeout(() => {
+            const alertSound = document.getElementById('alertSound');
+            alertSound.play();
+
+            if (Notification.permission === "granted") {
+                new Notification(`Lecture Reminder: ${lectureName}`, {
+                    body: message,
+                    icon: "https://cdn-icons-png.flaticon.com/512/747/747310.png"
                 });
-
-                if (response.ok) {
-                    status.textContent = 'Reminder set successfully! You\'ll receive reminders on selected days.';
-                    status.style.color = 'green';
-                    
-                    // Calculate first reminder
-                    const startDate = new Date(document.getElementById('startDate').value);
-                    const lectureTime = document.getElementById('lectureTime').value;
-                    const [hours, minutes] = lectureTime.split(':');
-                    const selectedDaysArray = Array.from(selectedDays).map(cb => cb.value);
-                    
-                    let firstReminder = new Date(startDate);
-                    firstReminder.setHours(hours, minutes, 0, 0);
-
-                    // Find next valid day if start date doesn't match selected days
-                    while (!selectedDaysArray.includes(firstReminder.toLocaleString('en-US', { weekday: 'long' }))) {
-                        firstReminder.setDate(firstReminder.getDate() + 1);
-                    }
-
-                    const now = new Date();
-                    if (now > firstReminder) {
-                        firstReminder.setDate(firstReminder.getDate() + 1);
-                        while (!selectedDaysArray.includes(firstReminder.toLocaleString('en-US', { weekday: 'long' }))) {
-                            firstReminder.setDate(firstReminder.getDate() + 1);
-                        }
-                    }
-
-                    const timeUntilReminder = firstReminder - now;
-                    console.log(`First reminder scheduled for ${firstReminder.toLocaleString()} (${Math.round(timeUntilReminder/1000/60)} minutes from now)`);
-
-                    form.reset();
-                } else {
-                    throw new Error('Form submission failed');
-                }
-            } catch (error) {
-                status.textContent = 'Error setting reminder. Please try again.';
-                status.style.color = 'red';
-                console.error(error);
+            } else {
+                alert(`📢 ${lectureName}: ${message}`);
             }
-        });
-    </script>
+        }, timeDiff);
+    });
+    // Register the service worker
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js")
+            .then(() => console.log("Service Worker Registered"))
+            .catch(err => console.log("SW registration failed:", err));
+    }
+</script>
+
 </body>
 </html>
