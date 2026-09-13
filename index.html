@@ -12,50 +12,16 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <div>
-        <p class="eyebrow">PERSONAL PRODUCTIVITY</p>
-        <h1>Task Reminder</h1>
-      </div>
-      <div class="topbar-actions">
-        <button class="icon-button" id="notificationButton" type="button" title="Enable notifications" aria-label="Enable notifications">🔔</button>
-        <button class="primary-button" id="openTaskButton" type="button">+ New task</button>
-      </div>
+      <div><p class="eyebrow">PERSONAL PRODUCTIVITY</p><h1>Task Reminder</h1></div>
+      <div class="topbar-actions"><button class="icon-button" id="notificationButton" type="button" title="Enable notifications" aria-label="Enable notifications">🔔</button><button class="primary-button" id="openTaskButton" type="button">+ New task</button></div>
     </header>
-
     <main>
-      <section class="hero-card">
-        <div>
-          <p class="eyebrow">YOUR DAY</p>
-          <h2 id="greeting">Good evening</h2>
-          <p id="todayLabel" class="muted"></p>
-        </div>
-        <div class="progress-wrap">
-          <div class="progress-label"><span>Today's progress</span><strong id="progressText">0%</strong></div>
-          <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
-        </div>
-      </section>
-
-      <section class="stats-grid" aria-label="Task summary">
-        <article class="stat-card"><span>Today</span><strong id="todayCount">0</strong></article>
-        <article class="stat-card"><span>Upcoming</span><strong id="upcomingCount">0</strong></article>
-        <article class="stat-card"><span>Completed</span><strong id="completedCount">0</strong></article>
-        <article class="stat-card"><span>Total</span><strong id="totalCount">0</strong></article>
-      </section>
-
-      <section class="toolbar">
-        <div class="filter-tabs" role="tablist" aria-label="Task filters">
-          <button class="filter-tab active" data-filter="today" type="button">Today</button>
-          <button class="filter-tab" data-filter="upcoming" type="button">Upcoming</button>
-          <button class="filter-tab" data-filter="completed" type="button">Completed</button>
-          <button class="filter-tab" data-filter="all" type="button">All</button>
-        </div>
-        <div class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Search tasks..." /></div>
-      </section>
-
+      <section class="hero-card"><div><p class="eyebrow">YOUR DAY</p><h2 id="greeting">Good evening</h2><p id="todayLabel" class="muted"></p></div><div class="progress-wrap"><div class="progress-label"><span>Today's progress</span><strong id="progressText">0%</strong></div><div class="progress-track"><div id="progressBar" class="progress-bar"></div></div></div></section>
+      <section class="stats-grid" aria-label="Task summary"><article class="stat-card"><span>Today</span><strong id="todayCount">0</strong></article><article class="stat-card"><span>Upcoming</span><strong id="upcomingCount">0</strong></article><article class="stat-card"><span>Completed</span><strong id="completedCount">0</strong></article><article class="stat-card"><span>Total</span><strong id="totalCount">0</strong></article></section>
+      <section class="toolbar"><div class="filter-tabs" role="tablist" aria-label="Task filters"><button class="filter-tab active" data-filter="today" type="button">Today</button><button class="filter-tab" data-filter="upcoming" type="button">Upcoming</button><button class="filter-tab" data-filter="completed" type="button">Completed</button><button class="filter-tab" data-filter="all" type="button">All</button></div><div class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Search tasks..." /></div></section>
       <section id="taskList" class="task-list" aria-live="polite"></section>
     </main>
   </div>
-
   <div id="taskModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-backdrop" data-close-modal></div>
     <div class="modal-card">
@@ -64,21 +30,16 @@
         <input id="taskId" type="hidden" />
         <label>Task name<input id="taskTitle" maxlength="120" required placeholder="e.g. Complete Go exercise" /></label>
         <label>Reminder message<textarea id="taskMessage" rows="3" maxlength="300" placeholder="What should the reminder say?"></textarea></label>
-        <div class="form-grid">
-          <label>Date<input id="taskDate" type="date" required /></label>
-          <label>Time<input id="taskTime" type="time" required /></label>
-        </div>
-        <div class="form-grid">
-          <label>Category<select id="taskCategory"><option>Personal</option><option>Study</option><option>Work</option><option>Spiritual</option><option>Health</option><option>Other</option></select></label>
-          <label>Priority<select id="taskPriority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></label>
-        </div>
+        <div class="form-grid"><label>Date<input id="taskDate" type="date" required /></label><label>Time<input id="taskTime" type="time" required /></label></div>
+        <div class="form-grid"><label>Category<select id="taskCategory"><option>Personal</option><option>Study</option><option>Work</option><option>Spiritual</option><option>Health</option><option>Other</option></select></label><label>Priority<select id="taskPriority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></label></div>
         <label>Repeat<select id="taskRepeat"><option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option></select></label>
         <div id="weekdayPicker" class="weekday-picker hidden" aria-label="Repeat days"></div>
+        <fieldset class="reminder-options"><legend>Remind me</legend><label><input type="checkbox" name="reminder" value="0" checked /> At the scheduled time</label><label><input type="checkbox" name="reminder" value="5" /> 5 minutes before</label><label><input type="checkbox" name="reminder" value="15" /> 15 minutes before</label><label><input type="checkbox" name="reminder" value="30" /> 30 minutes before</label><label><input type="checkbox" name="reminder" value="60" /> 1 hour before</label></fieldset>
+        <p class="form-hint">Reminders run while the app is active. Reliable background delivery will be added with Push + cloud scheduling.</p>
         <div class="form-actions"><button class="secondary-button" data-close-modal type="button">Cancel</button><button class="primary-button" type="submit">Save task</button></div>
       </form>
     </div>
   </div>
-
   <div id="toast" class="toast" role="status"></div>
   <script type="module" src="js/app.js"></script>
 </body>
