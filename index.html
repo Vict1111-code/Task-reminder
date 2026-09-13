@@ -1,217 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Daily Lecture Reminder</title>
-
-    <!--manifest-->
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#7597de">
-
-
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-
-<style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-        font-family: 'Poppins', sans-serif;
-        background: linear-gradient(135deg, #2b1055, #7597de);
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        padding: 20px;
-        color: #fff;
-    }
-    .card {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(12px);
-        padding: 25px;
-        border-radius: 15px;
-        max-width: 600px;
-        width: 100%;
-        box-shadow: 0 0 25px rgba(0,0,0,0.2);
-        animation: fadeIn 0.6s ease-in-out;
-    }
-    h2 {
-        text-align: center;
-        font-weight: 600;
-        margin-bottom: 20px;
-    }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 6px; font-weight: 500; }
-    input, textarea {
-        width: 100%;
-        padding: 10px;
-        border-radius: 8px;
-        border: none;
-        outline: none;
-        font-size: 1rem;
-        background: rgba(255,255,255,0.15);
-        color: #fff;
-        transition: 0.3s;
-    }
-    input:focus, textarea:focus { background: rgba(255,255,255,0.25); }
-    .checkbox-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-    .checkbox-group label {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        background: rgba(255,255,255,0.15);
-        padding: 5px 10px;
-        border-radius: 6px;
-        transition: 0.3s;
-    }
-    .checkbox-group label:hover { background: rgba(255,255,255,0.25); }
-    button {
-        background: linear-gradient(90deg, #4CAF50, #43a047);
-        color: white;
-        padding: 12px 18px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        width: 100%;
-        transition: 0.3s;
-    }
-    button:hover {
-        transform: scale(1.03);
-        background: linear-gradient(90deg, #43a047, #4CAF50);
-    }
-    #status {
-        margin-top: 10px;
-        font-weight: 500;
-        text-align: center;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="Task Reminder is a simple offline-first personal task and reminder manager." />
+  <title>Task Reminder</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">PERSONAL PRODUCTIVITY</p>
+        <h1>Task Reminder</h1>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-button" id="notificationButton" type="button" title="Enable notifications" aria-label="Enable notifications">🔔</button>
+        <button class="primary-button" id="openTaskButton" type="button">+ New task</button>
+      </div>
+    </header>
 
-<div class="card">
-    <h2>📅 Daily Lecture Reminder</h2>
-    <form id="reminderForm">
-        <div class="form-group">
-            <label for="email">Your Email:</label>
-            <input type="email" id="email" name="email" placeholder="e.g. you@example.com" required>
+    <main>
+      <section class="hero-card">
+        <div>
+          <p class="eyebrow">YOUR DAY</p>
+          <h2 id="greeting">Good evening</h2>
+          <p id="todayLabel" class="muted"></p>
         </div>
-        <div class="form-group">
-            <label for="startDate">Start Date:</label>
-            <input type="date" id="startDate" name="startDate" required>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Today's progress</span><strong id="progressText">0%</strong></div>
+          <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
         </div>
-        <div class="form-group">
-            <label for="lectureTime">Lecture Time:</label>
-            <input type="time" id="lectureTime" name="lectureTime" required>
+      </section>
+
+      <section class="stats-grid" aria-label="Task summary">
+        <article class="stat-card"><span>Today</span><strong id="todayCount">0</strong></article>
+        <article class="stat-card"><span>Upcoming</span><strong id="upcomingCount">0</strong></article>
+        <article class="stat-card"><span>Completed</span><strong id="completedCount">0</strong></article>
+        <article class="stat-card"><span>Total</span><strong id="totalCount">0</strong></article>
+      </section>
+
+      <section class="toolbar">
+        <div class="filter-tabs" role="tablist" aria-label="Task filters">
+          <button class="filter-tab active" data-filter="today" type="button">Today</button>
+          <button class="filter-tab" data-filter="upcoming" type="button">Upcoming</button>
+          <button class="filter-tab" data-filter="completed" type="button">Completed</button>
+          <button class="filter-tab" data-filter="all" type="button">All</button>
         </div>
-        <div class="form-group">
-            <label>Days of Week:</label>
-            <div class="checkbox-group">
-                <label><input type="checkbox" name="days[]" value="Monday"> Mon</label>
-                <label><input type="checkbox" name="days[]" value="Tuesday"> Tue</label>
-                <label><input type="checkbox" name="days[]" value="Wednesday"> Wed</label>
-                <label><input type="checkbox" name="days[]" value="Thursday"> Thu</label>
-                <label><input type="checkbox" name="days[]" value="Friday"> Fri</label>
-                <label><input type="checkbox" name="days[]" value="Saturday"> Sat</label>
-                <label><input type="checkbox" name="days[]" value="Sunday"> Sun</label>
-            </div>
+        <div class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Search tasks..." /></div>
+      </section>
+
+      <section id="taskList" class="task-list" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <div id="taskModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <div class="modal-header"><div><p class="eyebrow">TASK</p><h2 id="modalTitle">Create task</h2></div><button class="icon-button" data-close-modal type="button" aria-label="Close">×</button></div>
+      <form id="taskForm">
+        <input id="taskId" type="hidden" />
+        <label>Task name<input id="taskTitle" maxlength="120" required placeholder="e.g. Complete Go exercise" /></label>
+        <label>Reminder message<textarea id="taskMessage" rows="3" maxlength="300" placeholder="What should the reminder say?"></textarea></label>
+        <div class="form-grid">
+          <label>Date<input id="taskDate" type="date" required /></label>
+          <label>Time<input id="taskTime" type="time" required /></label>
         </div>
-        <div class="form-group">
-            <label for="lectureName">Lecture Name:</label>
-            <input type="text" id="lectureName" name="lectureName" placeholder="e.g. Physics 101" required>
+        <div class="form-grid">
+          <label>Category<select id="taskCategory"><option>Personal</option><option>Study</option><option>Work</option><option>Spiritual</option><option>Health</option><option>Other</option></select></label>
+          <label>Priority<select id="taskPriority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></label>
         </div>
-        <div class="form-group">
-            <label for="message">Reminder Message:</label>
-            <textarea id="message" name="message" rows="4" placeholder="Write your reminder..." required></textarea>
-        </div>
-        <button type="submit">Set Reminder</button>
-    </form>
-    <div id="status"></div>
-</div>
+        <label>Repeat<select id="taskRepeat"><option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option></select></label>
+        <div id="weekdayPicker" class="weekday-picker hidden" aria-label="Repeat days"></div>
+        <div class="form-actions"><button class="secondary-button" data-close-modal type="button">Cancel</button><button class="primary-button" type="submit">Save task</button></div>
+      </form>
+    </div>
+  </div>
 
-<!-- Sound alert -->
-<audio id="alertSound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
-
-<script>
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('startDate').min = today;
-
-    // Request notification permission
-    if ("Notification" in window && Notification.permission !== "granted") {
-        Notification.requestPermission();
-    }
-
-    document.getElementById('reminderForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const status = document.getElementById('status');
-        const selectedDays = document.querySelectorAll('input[name="days[]"]:checked');
-
-        if (selectedDays.length === 0) {
-            status.textContent = '⚠ Please select at least one day.';
-            status.style.color = 'orange';
-            return;
-        }
-
-        const startDate = document.getElementById('startDate').value;
-        const lectureTime = document.getElementById('lectureTime').value;
-        const lectureName = document.getElementById('lectureName').value;
-        const message = document.getElementById('message').value;
-
-        const [hours, minutes] = lectureTime.split(':');
-        let reminderDate = new Date(startDate);
-        reminderDate.setHours(hours, minutes, 0, 0);
-
-        const dayNames = Array.from(selectedDays).map(cb => cb.value);
-
-        // Adjust reminder to match one of the selected days
-        while (!dayNames.includes(reminderDate.toLocaleDateString('en-US', { weekday: 'long' }))) {
-            reminderDate.setDate(reminderDate.getDate() + 1);
-        }
-
-        const now = new Date();
-        const timeDiff = reminderDate.getTime() - now.getTime();
-
-        if (timeDiff <= 0) {
-            status.textContent = "⏳ Reminder time must be in the future.";
-            status.style.color = "red";
-            return;
-        }
-
-        status.textContent = `✅ Reminder set for ${reminderDate.toLocaleString()}`;
-        status.style.color = "#4CAF50";
-
-        // Schedule the notification
-        setTimeout(() => {
-            const alertSound = document.getElementById('alertSound');
-            alertSound.play();
-
-            if (Notification.permission === "granted") {
-                new Notification(`Lecture Reminder: ${lectureName}`, {
-                    body: message,
-                    icon: "https://cdn-icons-png.flaticon.com/512/747/747310.png"
-                });
-            } else {
-                alert(`📢 ${lectureName}: ${message}`);
-            }
-        }, timeDiff);
-    });
-    // Register the service worker
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js")
-            .then(() => console.log("Service Worker Registered"))
-            .catch(err => console.log("SW registration failed:", err));
-    }
-</script>
-
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
