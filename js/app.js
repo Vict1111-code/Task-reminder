@@ -1,30 +1,26 @@
 import { getTasks, saveTask, deleteTask } from './storage.js';
-import { makeTask, isToday, isUpcoming, matchesSearch, formatDateTime, taskDateTime } from './tasks.js';
+import { makeTask, isToday, isUpcoming, matchesSearch, formatDateTime, taskDateTime, nextOccurrence, activeReminder, occurrenceKey } from './tasks.js';
 
 const $ = (selector) => document.querySelector(selector);
 const state = { tasks: [], filter: 'today', query: '', notified: new Set() };
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-const elements = {
-  list: $('#taskList'), modal: $('#taskModal'), form: $('#taskForm'), title: $('#taskTitle'), message: $('#taskMessage'),
-  date: $('#taskDate'), time: $('#taskTime'), category: $('#taskCategory'), priority: $('#taskPriority'), repeat: $('#taskRepeat'),
-  id: $('#taskId'), weekdayPicker: $('#weekdayPicker'), search: $('#searchInput')
-};
+const elements = { list: $('#taskList'), modal: $('#taskModal'), form: $('#taskForm'), title: $('#taskTitle'), message: $('#taskMessage'), date: $('#taskDate'), time: $('#taskTime'), category: $('#taskCategory'), priority: $('#taskPriority'), repeat: $('#taskRepeat'), id: $('#taskId'), weekdayPicker: $('#weekdayPicker'), search: $('#searchInput') };
 
 function todayIso() { return new Date().toISOString().slice(0, 10); }
-function showToast(message) { const toast = $('#toast'); toast.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2400); }
+function showToast(message, actionLabel = '', action = null) {
+  const toast = $('#toast'); toast.innerHTML = '';
+  const text = document.createElement('span'); text.textContent = message; toast.append(text);
+  if (actionLabel && action) { const button = document.createElement('button'); button.className = 'toast-action'; button.textContent = actionLabel; button.onclick = action; toast.append(button); }
+  toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 5000);
+}
 
 function render() {
-  const filtered = state.tasks
-    .filter((task) => {
-      if (state.filter === 'today') return isToday(task);
-      if (state.filter === 'upcoming') return isUpcoming(task);
-      if (state.filter === 'completed') return task.completed;
-      return true;
-    })
-    .filter((task) => matchesSearch(task, state.query))
-    .sort((a, b) => taskDateTime(a) - taskDateTime(b));
-
+  const filtered = state.tasks.filter((task) => {
+    if (state.filter === 'today') return isToday(task);
+    if (state.filter === 'upcoming') return isUpcoming(task);
+    if (state.filter === 'completed') return task.completed;
+    return true;
+  }).filter((task) => matchesSearch(task, state.query)).sort((a, b) => nextOccurrence(a) - nextOccurrence(b));
   elements.list.innerHTML = filtered.length ? filtered.map(taskCard).join('') : '<div class="empty-state"><strong>No tasks here yet.</strong><p>Add a task or change the filter to see more.</p></div>';
   updateStats();
 }
@@ -32,106 +28,69 @@ function render() {
 function taskCard(task) {
   const priority = `priority-${task.priority}`;
   const repeat = task.repeat === 'none' ? '' : `<span class="badge">↻ ${task.repeat}</span>`;
-  return `<article class="task-card ${task.completed ? 'completed' : ''}">
-    <button class="check-button" data-action="toggle" data-id="${task.id}" aria-label="${task.completed ? 'Mark incomplete' : 'Mark complete'}"></button>
-    <div class="task-main"><div class="task-title">${escapeHtml(task.title)}</div><div class="task-meta"><span>${escapeHtml(formatDateTime(task))}</span><span class="badge">${escapeHtml(task.category)}</span><span class="badge ${priority}">${escapeHtml(task.priority)}</span>${repeat}</div></div>
-    <div class="task-actions"><button class="small-button" data-action="edit" data-id="${task.id}" aria-label="Edit task">✎</button><button class="small-button" data-action="delete" data-id="${task.id}" aria-label="Delete task">×</button></div>
-  </article>`;
+  const reminderCount = task.reminders?.length || 1;
+  return `<article class="task-card ${task.completed ? 'completed' : ''}"><button class="check-button" data-action="toggle" data-id="${task.id}" aria-label="${task.completed ? 'Mark incomplete' : 'Mark complete'}"></button><div class="task-main"><div class="task-title">${escapeHtml(task.title)}</div><div class="task-meta"><span>${escapeHtml(formatDateTime(task))}</span><span class="badge">${escapeHtml(task.category)}</span><span class="badge ${priority}">${escapeHtml(task.priority)}</span>${repeat}<span class="badge">🔔 ${reminderCount}</span></div></div><div class="task-actions"><button class="small-button" data-action="snooze" data-id="${task.id}" aria-label="Snooze 10 minutes">Zz</button><button class="small-button" data-action="edit" data-id="${task.id}" aria-label="Edit task">✎</button><button class="small-button" data-action="delete" data-id="${task.id}" aria-label="Delete task">×</button></div></article>`;
 }
-
 function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' }[char])); }
+function updateStats() { const today = state.tasks.filter(isToday); const completed = state.tasks.filter((task) => task.completed); const upcoming = state.tasks.filter(isUpcoming); $('#todayCount').textContent = today.length; $('#upcomingCount').textContent = upcoming.length; $('#completedCount').textContent = completed.length; $('#totalCount').textContent = state.tasks.length; const doneToday = today.filter((task) => task.completed).length; const percent = today.length ? Math.round((doneToday / today.length) * 100) : 0; $('#progressText').textContent = `${percent}%`; $('#progressBar').style.width = `${percent}%`; }
 
-function updateStats() {
-  const today = state.tasks.filter(isToday);
-  const completed = state.tasks.filter((task) => task.completed);
-  const upcoming = state.tasks.filter(isUpcoming);
-  $('#todayCount').textContent = today.length;
-  $('#upcomingCount').textContent = upcoming.length;
-  $('#completedCount').textContent = completed.length;
-  $('#totalCount').textContent = state.tasks.length;
-  const doneToday = today.filter((task) => task.completed).length;
-  const percent = today.length ? Math.round((doneToday / today.length) * 100) : 0;
-  $('#progressText').textContent = `${percent}%`;
-  $('#progressBar').style.width = `${percent}%`;
-}
+function setReminderInputs(reminders = [0]) { document.querySelectorAll('input[name="reminder"]').forEach((input) => { input.checked = reminders.map(Number).includes(Number(input.value)); }); }
+function getReminderInputs() { const values = [...document.querySelectorAll('input[name="reminder"]:checked')].map((input) => Number(input.value)); return values.length ? values : [0]; }
 
 function openModal(task = null) {
-  elements.form.reset();
-  elements.id.value = task?.id || '';
-  elements.title.value = task?.title || '';
-  elements.message.value = task?.message || '';
-  elements.date.value = task?.date || todayIso();
-  elements.time.value = task?.time || '08:00';
-  elements.category.value = task?.category || 'Personal';
-  elements.priority.value = task?.priority || 'medium';
-  elements.repeat.value = task?.repeat || 'none';
-  $('#modalTitle').textContent = task ? 'Edit task' : 'Create task';
-  renderWeekdays(task?.repeatDays || []);
-  elements.modal.classList.remove('hidden');
-  elements.title.focus();
+  elements.form.reset(); elements.id.value = task?.id || ''; elements.title.value = task?.title || ''; elements.message.value = task?.message || ''; elements.date.value = task?.date || todayIso(); elements.time.value = task?.time || '08:00'; elements.category.value = task?.category || 'Personal'; elements.priority.value = task?.priority || 'medium'; elements.repeat.value = task?.repeat || 'none';
+  $('#modalTitle').textContent = task ? 'Edit task' : 'Create task'; renderWeekdays(task?.repeatDays || []); setReminderInputs(task?.reminders || [0]); elements.modal.classList.remove('hidden'); elements.title.focus();
 }
-
 function closeModal() { elements.modal.classList.add('hidden'); }
-
-function renderWeekdays(selected = []) {
-  elements.weekdayPicker.classList.toggle('hidden', elements.repeat.value !== 'weekly');
-  elements.weekdayPicker.innerHTML = weekdays.map((name, index) => `<button type="button" class="day-choice ${selected.includes(index) ? 'active' : ''}" data-day="${index}">${name}</button>`).join('');
-}
+function renderWeekdays(selected = []) { elements.weekdayPicker.classList.toggle('hidden', elements.repeat.value !== 'weekly'); elements.weekdayPicker.innerHTML = weekdays.map((name, index) => `<button type="button" class="day-choice ${selected.includes(index) ? 'active' : ''}" data-day="${index}">${name}</button>`).join(''); }
 
 async function submitTask(event) {
   event.preventDefault();
   const existing = state.tasks.find((task) => task.id === elements.id.value);
   const repeatDays = [...elements.weekdayPicker.querySelectorAll('.day-choice.active')].map((button) => Number(button.dataset.day));
-  const task = makeTask({ id: elements.id.value || undefined, title: elements.title.value, message: elements.message.value, date: elements.date.value, time: elements.time.value, category: elements.category.value, priority: elements.priority.value, repeat: elements.repeat.value, repeatDays, completed: existing?.completed, createdAt: existing?.createdAt });
-  await saveTask(task);
-  const index = state.tasks.findIndex((item) => item.id === task.id);
-  if (index >= 0) state.tasks[index] = task; else state.tasks.push(task);
-  closeModal(); render(); showToast(existing ? 'Task updated' : 'Task created');
+  const task = makeTask({ id: elements.id.value || undefined, title: elements.title.value, message: elements.message.value, date: elements.date.value, time: elements.time.value, category: elements.category.value, priority: elements.priority.value, repeat: elements.repeat.value, repeatDays, reminders: getReminderInputs(), completed: existing?.completed, createdAt: existing?.createdAt, lastTriggered: existing?.lastTriggered });
+  await saveTask(task); const index = state.tasks.findIndex((item) => item.id === task.id); if (index >= 0) state.tasks[index] = task; else state.tasks.push(task); closeModal(); render(); showToast(existing ? 'Task updated' : 'Task created');
 }
 
-async function toggleTask(id) {
-  const task = state.tasks.find((item) => item.id === id); if (!task) return;
-  task.completed = !task.completed; task.updatedAt = new Date().toISOString(); await saveTask(task); render();
+async function toggleTask(id) { const task = state.tasks.find((item) => item.id === id); if (!task) return; task.completed = !task.completed; task.updatedAt = new Date().toISOString(); await saveTask(task); render(); }
+async function removeTask(id) { const task = state.tasks.find((item) => item.id === id); if (!task) return; if (!confirm(`Delete “${task.title}”?`)) return; await deleteTask(id); state.tasks = state.tasks.filter((item) => item.id !== id); render(); showToast('Task deleted'); }
+async function snoozeTask(id, minutes = 10) { const task = state.tasks.find((item) => item.id === id); if (!task) return; task.snoozeUntil = new Date(Date.now() + minutes * 60000).toISOString(); task.updatedAt = new Date().toISOString(); await saveTask(task); showToast(`Snoozed for ${minutes} minutes`); }
+
+async function notify(task, reminder) {
+  const occurrence = reminder.occurrence || nextOccurrence(task, new Date(Date.now() - 60000));
+  const key = `${occurrenceKey(task, occurrence)}:${reminder.minutesBefore}`;
+  if (state.notified.has(key)) return;
+  state.notified.add(key); task.lastTriggered = key; task.snoozeUntil = null; await saveTask(task);
+  const prefix = reminder.minutesBefore ? `${reminder.minutesBefore} minutes until` : "It's time for";
+  const body = `${prefix} ${task.title}. ${task.message}`;
+  try {
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(task.title, { body, icon: 'icons/icon-192.png', tag: key, renotify: true, data: { taskId: task.id }, actions: [{ action: 'snooze', title: 'Snooze 10m' }, { action: 'done', title: 'Done' }] });
+    } else if ('Notification' in window && Notification.permission === 'granted') new Notification(task.title, { body });
+    else showToast(`⏰ ${body}`, 'Snooze 10m', () => snoozeTask(task.id));
+  } catch { showToast(`⏰ ${body}`, 'Snooze 10m', () => snoozeTask(task.id)); }
+  try { const audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg'); await audio.play(); } catch { /* autoplay may be blocked */ }
 }
 
-async function removeTask(id) {
-  const task = state.tasks.find((item) => item.id === id); if (!task) return;
-  if (!confirm(`Delete “${task.title}”?`)) return;
-  await deleteTask(id); state.tasks = state.tasks.filter((item) => item.id !== id); render(); showToast('Task deleted');
-}
-
-function checkReminders() {
+async function checkReminders() {
   const now = new Date();
-  state.tasks.forEach((task) => {
-    if (task.completed || task.repeat !== 'none') return;
-    const due = taskDateTime(task);
-    const key = `${task.id}:${task.date}:${task.time}`;
-    if (due <= now && now - due < 60000 && !state.notified.has(key)) { state.notified.add(key); notify(task); }
-  });
+  for (const task of state.tasks) { const reminder = activeReminder(task, now); if (reminder && task.lastTriggered !== `${occurrenceKey(task, reminder.occurrence)}:${reminder.minutesBefore}`) await notify(task, reminder); }
 }
 
-async function notify(task) {
-  const message = task.message || `Reminder: ${task.title}`;
-  if ('Notification' in window && Notification.permission === 'granted') new Notification(task.title, { body: message, icon: 'icons/icon-192.png' });
-  else showToast(`⏰ ${task.title}`);
-  try { const audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg'); await audio.play(); } catch { /* browser autoplay may block sound */ }
-}
+async function requestNotifications() { if (!('Notification' in window)) return showToast('Notifications are not supported by this browser'); const permission = await Notification.requestPermission(); showToast(permission === 'granted' ? 'Notifications enabled' : 'Notification permission was not granted'); }
 
-async function requestNotifications() {
-  if (!('Notification' in window)) return showToast('Notifications are not supported by this browser');
-  const permission = await Notification.requestPermission();
-  showToast(permission === 'granted' ? 'Notifications enabled' : 'Notification permission was not granted');
-}
+navigator.serviceWorker?.addEventListener('message', async (event) => { if (event.data?.type === 'SNOOZE_TASK') await snoozeTask(event.data.taskId, 10); if (event.data?.type === 'COMPLETE_TASK') await toggleTask(event.data.taskId); });
 
 document.addEventListener('click', async (event) => {
   const close = event.target.closest('[data-close-modal]'); if (close) return closeModal();
   const filter = event.target.closest('[data-filter]'); if (filter) { state.filter = filter.dataset.filter; document.querySelectorAll('.filter-tab').forEach((button) => button.classList.toggle('active', button === filter)); return render(); }
   const day = event.target.closest('[data-day]'); if (day) return day.classList.toggle('active');
   const action = event.target.closest('[data-action]'); if (!action) return;
-  const task = state.tasks.find((item) => item.id === action.dataset.id);
   if (action.dataset.action === 'toggle') return toggleTask(action.dataset.id);
   if (action.dataset.action === 'delete') return removeTask(action.dataset.id);
-  if (action.dataset.action === 'edit') return openModal(task);
+  if (action.dataset.action === 'edit') return openModal(state.tasks.find((item) => item.id === action.dataset.id));
+  if (action.dataset.action === 'snooze') return snoozeTask(action.dataset.id);
 });
 
 $('#openTaskButton').addEventListener('click', () => openModal());
@@ -141,14 +100,6 @@ elements.repeat.addEventListener('change', () => renderWeekdays());
 elements.search.addEventListener('input', (event) => { state.query = event.target.value; render(); });
 
 async function init() {
-  state.tasks = await getTasks();
-  $('#todayLabel').textContent = new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  const hour = new Date().getHours();
-  $('#greeting').textContent = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  render();
-  checkReminders();
-  setInterval(checkReminders, 15000);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(console.error);
+  state.tasks = await getTasks(); $('#todayLabel').textContent = new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }); const hour = new Date().getHours(); $('#greeting').textContent = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'; render(); await checkReminders(); setInterval(checkReminders, 15000); if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(console.error);
 }
-
 init().catch((error) => { console.error(error); showToast('Could not load saved tasks'); });
